@@ -32,6 +32,66 @@
       overflow:hidden;
     }
 
+    /* ===== Password gate styles ===== */
+    .gate{
+      width:min(560px, 92vw);
+      padding:26px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:22px;
+      background: rgba(15,23,42,.55);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      text-align:center;
+    }
+
+    .gate h2{ margin:0 0 8px; font-weight:800; letter-spacing:-.02em; }
+    .gate p{ margin:0 0 18px; color:var(--muted); line-height:1.45; }
+
+    .gate input{
+      width:100%;
+      padding:14px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      font-size:16px;
+      outline:none;
+    }
+
+    .gate button{
+      width:100%;
+      margin-top:10px;
+      padding:14px 18px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,77,109,.18);
+      color:var(--text);
+      cursor:pointer;
+      transition:.2s;
+      font-weight:800;
+    }
+    .gate button:hover{ transform: translateY(-1px); background: rgba(255,77,109,.26); }
+
+    .gate .msg{
+      margin-top:10px;
+      min-height:18px;
+      color:#ffb4c1;
+      font-size:13px;
+    }
+
+    /* ===== Protected content wrapper (fix: ONLY display:none here) ===== */
+    #protectedContent{
+      display:none;          /* hidden by default */
+      width:100%;
+      min-height:100vh;
+      place-items:center;    /* used only when display:grid */
+      padding:20px 0;
+    }
+    #protectedContent.show{
+      display:grid;          /* show and center when unlocked */
+    }
+
+    /* ===== Your original styles ===== */
     .wrap{
       width:min(560px, 92vw);
       padding:26px;
@@ -201,155 +261,209 @@
 </head>
 
 <body>
-  <main class="wrap" id="wrap">
-    <div class="fx-layer" id="fx"></div>
 
-    <h1>Hey Chinelo Favour 💕</h1>
-    <p>
-      Hi FiFi…<br>
-      I know this is a little extra, but you mean a lot to me and I wanted to do
-      something sweet and different. Just take a breath, smile, and tap the button.
-    </p>
+  <!-- ========= PASSWORD GATE ========= -->
+  <main class="gate" id="gate">
+    <h2>Enter Password</h2>
+    <p>This page is locked. Type the password to continue.</p>
 
-    <button class="center-btn" id="startBtn">💌 Tap to start</button>
-    <div class="hint" id="hint"></div>
+    <input id="gatePw" type="password" placeholder="Password" autocomplete="off" />
+    <button id="gateBtn">Unlock</button>
 
-    <div class="stage">
-      <div class="heart-wrap" id="heart"></div>
-
-      <div class="prompt" id="prompt">
-        <div class="question">Will you be my Val?</div>
-        <div class="actions">
-          <button class="btn btn-yes" id="yesBtn">Yes</button>
-          <button class="btn btn-no" id="noBtn">No</button>
-        </div>
-        <div class="status" id="status"></div>
-        <div class="small" id="smallNote"></div>
-      </div>
-    </div>
+    <div class="msg" id="gateMsg"></div>
   </main>
 
-  <!-- EmailJS -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <!-- ========= YOUR ORIGINAL PAGE (LOCKED CONTENT) ========= -->
+  <div id="protectedContent">
+    <main class="wrap" id="wrap">
+      <div class="fx-layer" id="fx"></div>
+
+      <h1>Hey Chinelo Favour 💕</h1>
+      <p>
+        Hi FiFi…<br>
+        I know this is a little extra, but you mean a lot to me and I wanted to do
+        something sweet and different. Just take a breath, smile, and tap the button.
+      </p>
+
+      <button class="center-btn" id="startBtn">💌 Tap to start</button>
+      <div class="hint" id="hint"></div>
+
+      <div class="stage">
+        <div class="heart-wrap" id="heart"></div>
+
+        <div class="prompt" id="prompt">
+          <div class="question">Will you be my Val?</div>
+          <div class="actions">
+            <button class="btn btn-yes" id="yesBtn">Yes</button>
+            <button class="btn btn-no" id="noBtn">No</button>
+          </div>
+          <div class="status" id="status"></div>
+          <div class="small" id="smallNote"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <script>
+      // ========= FILL THESE IN (EmailJS) =========
+      const EMAILJS_PUBLIC_KEY = "1h0ZBq00r5BkGpSY2";
+      const EMAILJS_SERVICE_ID = "service_gdd70mo";
+      const EMAILJS_TEMPLATE_ID = "template_q3or475";
+      // ==========================================
+
+      const PERSON_NAME = "Chinelo Favour (FiFi)";
+
+      const wrap = document.getElementById("wrap");
+      const fx = document.getElementById("fx");
+      const startBtn = document.getElementById("startBtn");
+      const heart = document.getElementById("heart");
+      const yesBtn = document.getElementById("yesBtn");
+      const noBtn = document.getElementById("noBtn");
+      const statusEl = document.getElementById("status");
+      const smallNote = document.getElementById("smallNote");
+      const hint = document.getElementById("hint");
+
+      let started = false;
+      let revealed = false;
+      let decided = false;
+
+      function rand(min, max){ return Math.random() * (max - min) + min; }
+
+      function spawn(emoji, count){
+        for(let i=0;i<count;i++){
+          const e=document.createElement("div");
+          e.className="float-emoji";
+          e.textContent=emoji;
+          e.style.left=rand(5,95)+"%";
+          e.style.bottom=rand(10,80)+"px";
+          e.style.fontSize=rand(14,28)+"px";
+          fx.appendChild(e);
+          setTimeout(()=>e.remove(),2000);
+        }
+      }
+
+      function emailConfigured(){
+        return !(
+          EMAILJS_PUBLIC_KEY.startsWith("YOUR_") ||
+          EMAILJS_SERVICE_ID.startsWith("YOUR_") ||
+          EMAILJS_TEMPLATE_ID.startsWith("YOUR_")
+        );
+      }
+
+      async function notify(choice){
+        if(!emailConfigured()){
+          return { ok:false, msg:"(Email not set up yet. Add your EmailJS keys.)" };
+        }
+
+        try{
+          emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+          const payload = {
+            choice,
+            name: PERSON_NAME,
+            time: new Date().toLocaleString(),
+            page: location.href
+          };
+
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, payload);
+          return { ok:true, msg:"(Notification sent ✅)" };
+        }catch(e){
+          return { ok:false, msg:"(Couldn’t send email. Check EmailJS settings.)" };
+        }
+      }
+
+      startBtn.onclick=()=>{
+        if(started) return;
+        started=true;
+        wrap.classList.add("started");
+        hint.textContent="Now tap the heart ❤️";
+        startBtn.disabled=true;
+      };
+
+      heart.onclick=()=>{
+        if(!started||revealed) return;
+        revealed=true;
+        wrap.classList.add("revealed");
+        hint.textContent="Okay… deep breath 😅";
+        statusEl.textContent="Choose honestly 😄";
+      };
+
+      yesBtn.onclick=async()=>{
+        if(decided) return;
+        decided=true;
+
+        yesBtn.disabled = true;
+        noBtn.disabled = true;
+
+        statusEl.textContent="Yessss 😭💖";
+        smallNote.textContent="You just made my whole day.";
+
+        spawn("💖",25); spawn("✨",20); spawn("💕",18);
+
+        const res = await notify("Yes");
+        smallNote.textContent = `You just made my whole day. ${res.msg}`;
+      };
+
+      noBtn.onclick=async()=>{
+        if(decided) return;
+        decided=true;
+
+        yesBtn.disabled = true;
+        noBtn.disabled = true;
+
+        heart.classList.add("broken");
+        heart.innerHTML='<div class="broken-emoji">💔</div>';
+
+        statusEl.textContent="Ouch 😭";
+        smallNote.textContent="My heart just did a backflip… we will try again next year.";
+
+        spawn("💔",28); spawn("🥀",14);
+
+        const res = await notify("No");
+        smallNote.textContent = `My heart just did a backflip… we will try again next year. ${res.msg}`;
+      };
+    </script>
+  </div>
 
   <script>
-    // ========= FILL THESE IN (EmailJS) =========
-    const EMAILJS_PUBLIC_KEY = "1h0ZBq00r5BkGpSY2";
-    const EMAILJS_SERVICE_ID = "service_gdd70mo";
-    const EMAILJS_TEMPLATE_ID = "template_q3or475";
-    // ==========================================
+    // ====== CHANGE THIS PASSWORD ======
+    const PASSWORD = "120599";
+    // ================================
 
-    const PERSON_NAME = "Chinelo Favour (FiFi)";
+    const gate = document.getElementById("gate");
+    const protectedContent = document.getElementById("protectedContent");
+    const gatePw = document.getElementById("gatePw");
+    const gateBtn = document.getElementById("gateBtn");
+    const gateMsg = document.getElementById("gateMsg");
 
-    const wrap = document.getElementById("wrap");
-    const fx = document.getElementById("fx");
-    const startBtn = document.getElementById("startBtn");
-    const heart = document.getElementById("heart");
-    const yesBtn = document.getElementById("yesBtn");
-    const noBtn = document.getElementById("noBtn");
-    const statusEl = document.getElementById("status");
-    const smallNote = document.getElementById("smallNote");
-    const hint = document.getElementById("hint");
+    // Keep unlocked while the tab stays open
+    if (sessionStorage.getItem("unlocked") === "yes") {
+      gate.style.display = "none";
+      protectedContent.classList.add("show");
+    }
 
-    let started = false;
-    let revealed = false;
-    let decided = false;
+    function unlock(){
+      const entered = gatePw.value;
 
-    function rand(min, max){ return Math.random() * (max - min) + min; }
-
-    function spawn(emoji, count){
-      for(let i=0;i<count;i++){
-        const e=document.createElement("div");
-        e.className="float-emoji";
-        e.textContent=emoji;
-        e.style.left=rand(5,95)+"%";
-        e.style.bottom=rand(10,80)+"px";
-        e.style.fontSize=rand(14,28)+"px";
-        fx.appendChild(e);
-        setTimeout(()=>e.remove(),2000);
+      if (entered === PASSWORD) {
+        sessionStorage.setItem("unlocked", "yes");
+        gate.style.display = "none";
+        protectedContent.classList.add("show");
+        gateMsg.textContent = "";
+      } else {
+        gateMsg.textContent = "Wrong password. Try again.";
+        gatePw.value = "";
+        gatePw.focus();
       }
     }
 
-    function emailConfigured(){
-      return !(
-        EMAILJS_PUBLIC_KEY.startsWith("YOUR_") ||
-        EMAILJS_SERVICE_ID.startsWith("YOUR_") ||
-        EMAILJS_TEMPLATE_ID.startsWith("YOUR_")
-      );
-    }
-
-    async function notify(choice){
-      if(!emailConfigured()){
-        return { ok:false, msg:"(Email not set up yet. Add your EmailJS keys.)" };
-      }
-
-      try{
-        emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-
-        const payload = {
-          choice,
-          name: PERSON_NAME,
-          time: new Date().toLocaleString(),
-          page: location.href
-        };
-
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, payload);
-        return { ok:true, msg:"(Notification sent ✅)" };
-      }catch(e){
-        return { ok:false, msg:"(Couldn’t send email. Check EmailJS settings.)" };
-      }
-    }
-
-    startBtn.onclick=()=>{
-      if(started) return;
-      started=true;
-      wrap.classList.add("started");
-      hint.textContent="Now tap the heart ❤️";
-      startBtn.disabled=true;
-    };
-
-    heart.onclick=()=>{
-      if(!started||revealed) return;
-      revealed=true;
-      wrap.classList.add("revealed");
-      hint.textContent="Okay… deep breath 😅";
-      statusEl.textContent="Choose honestly 😄";
-    };
-
-    yesBtn.onclick=async()=>{
-      if(decided) return;
-      decided=true;
-
-      yesBtn.disabled = true;
-      noBtn.disabled = true;
-
-      statusEl.textContent="Yessss 😭💖";
-      smallNote.textContent="You just made my whole day.";
-
-      spawn("💖",25); spawn("✨",20); spawn("💕",18);
-
-      const res = await notify("Yes");
-      smallNote.textContent = `You just made my whole day. ${res.msg}`;
-    };
-
-    noBtn.onclick=async()=>{
-      if(decided) return;
-      decided=true;
-
-      yesBtn.disabled = true;
-      noBtn.disabled = true;
-
-      heart.classList.add("broken");
-      heart.innerHTML='<div class="broken-emoji">💔</div>';
-
-      statusEl.textContent="Ouch 😭";
-      smallNote.textContent="My heart just did a backflip… we will try again next year.";
-
-      spawn("💔",28); spawn("🥀",14);
-
-      const res = await notify("No");
-      smallNote.textContent = `My heart just did a backflip… we will try again next year. ${res.msg}`;
-    };
+    gateBtn.addEventListener("click", unlock);
+    gatePw.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") unlock();
+    });
   </script>
+
 </body>
 </html>
